@@ -212,7 +212,7 @@ class Path(object):
              (self._codes is None or np.all(self._codes <= Path.LINETO)))
         )
         self._simplify_threshold = rcParams['path.simplify_threshold']
-        self._has_nonfinite = not np.isfinite(self._vertices).all()
+        self._has_nonfinite = None
 
     @property
     def vertices(self):
@@ -264,6 +264,8 @@ class Path(object):
         """
         `True` if the vertices array has nonfinite values.
         """
+        if self._has_nonfinite is None:
+            self._has_nonfinite = not np.isfinite(self._vertices).all()
         return self._has_nonfinite
 
     @property
@@ -460,10 +462,12 @@ class Path(object):
                                              remove_nans, clip,
                                              snap, stroke_width,
                                              simplify, curves, sketch)
-        internals = {'should_simplify': self.should_simplify and not simplify,
-                     'has_nonfinite': self.has_nonfinite and not remove_nans,
-                     'simplify_threshold': self.simplify_threshold,
-                     'interpolation_steps': self._interpolation_steps}
+        internals = {
+            'should_simplify': self.should_simplify and not simplify,
+            'has_nonfinite': False if remove_nans else self._has_nonfinite,
+            'simplify_threshold': self.simplify_threshold,
+            'interpolation_steps': self._interpolation_steps,
+        }
         return Path._fast_from_codes_and_verts(vertices, codes, internals)
 
     def transformed(self, transform):
