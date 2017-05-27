@@ -172,6 +172,25 @@ class Tick(artist.Artist):
 
         self.update_position(loc)
 
+    def copy(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+
+        result.label1 = result._get_text1()
+        result.label2 = result._get_text2()
+        result.label1.update_from(self.label1)
+        result.label2.update_from(self.label2)
+
+        result.tick1line = result._get_tick1line()
+        result.tick2line = result._get_tick2line()
+        result.gridline = result._get_gridline()
+        result.tick1line.update_from(self.tick1line)
+        result.tick2line.update_from(self.tick2line)
+        result.gridline.update_from(self.gridline)
+
+        return result
+
     @property
     @cbook.deprecated(since='2.1', obj_type='property',
                       alternative='the label1 and label2 properties')
@@ -775,10 +794,8 @@ class Axis(artist.Artist):
         del self.majorTicks[:]
         del self.minorTicks[:]
 
-        self.majorTicks.extend([self._get_tick(major=True)])
-        self.minorTicks.extend([self._get_tick(major=False)])
-        self._lastNumMajorTicks = 1
-        self._lastNumMinorTicks = 1
+        self.majorTicks.append(self._get_tick(major=True))
+        self.minorTicks.append(self._get_tick(major=False))
 
     def set_tick_params(self, which='major', reset=False, **kw):
         """
@@ -1288,22 +1305,6 @@ class Axis(artist.Artist):
         'return the default tick instance'
         raise NotImplementedError('derived must override')
 
-    def _copy_tick_props(self, src, dest):
-        'Copy the props from src tick to dest tick'
-        if src is None or dest is None:
-            return
-        dest.label1.update_from(src.label1)
-        dest.label2.update_from(src.label2)
-
-        dest.tick1line.update_from(src.tick1line)
-        dest.tick2line.update_from(src.tick2line)
-        dest.gridline.update_from(src.gridline)
-
-        dest.tick1On = src.tick1On
-        dest.tick2On = src.tick2On
-        dest.label1On = src.label1On
-        dest.label2On = src.label2On
-
     def get_label_text(self):
         'Get the text of the label'
         return self.label.get_text()
@@ -1329,20 +1330,14 @@ class Axis(artist.Artist):
         if numticks is None:
             numticks = len(self.get_major_locator()())
         if len(self.majorTicks) < numticks:
+            proto = self.majorTicks[0]
             # update the new tick label properties from the old
             for i in range(numticks - len(self.majorTicks)):
-                tick = self._get_tick(major=True)
-                self.majorTicks.append(tick)
-
-        if self._lastNumMajorTicks < numticks:
-            protoTick = self.majorTicks[0]
-            for i in range(self._lastNumMajorTicks, len(self.majorTicks)):
-                tick = self.majorTicks[i]
+                tick = proto.copy()
                 if self._gridOnMajor:
                     tick.gridOn = True
-                self._copy_tick_props(protoTick, tick)
+                self.majorTicks.append(tick)
 
-        self._lastNumMajorTicks = numticks
         ticks = self.majorTicks[:numticks]
 
         return ticks
@@ -1353,20 +1348,14 @@ class Axis(artist.Artist):
             numticks = len(self.get_minor_locator()())
 
         if len(self.minorTicks) < numticks:
+            proto = self.minorTicks[0]
             # update the new tick label properties from the old
             for i in range(numticks - len(self.minorTicks)):
-                tick = self._get_tick(major=False)
-                self.minorTicks.append(tick)
-
-        if self._lastNumMinorTicks < numticks:
-            protoTick = self.minorTicks[0]
-            for i in range(self._lastNumMinorTicks, len(self.minorTicks)):
-                tick = self.minorTicks[i]
+                tick = proto.copy()
                 if self._gridOnMinor:
                     tick.gridOn = True
-                self._copy_tick_props(protoTick, tick)
+                self.minorTicks.append(tick)
 
-        self._lastNumMinorTicks = numticks
         ticks = self.minorTicks[:numticks]
 
         return ticks
