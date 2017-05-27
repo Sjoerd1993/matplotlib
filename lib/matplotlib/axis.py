@@ -65,7 +65,8 @@ class Tick(artist.Artist):
           a boolean which determines whether to draw tick label
 
     """
-    def __init__(self, axes, loc, label,
+    def __init__(self, axes, loc,
+                 label=None,  # Deprecated.
                  size=None,  # points
                  width=None,
                  color=None,
@@ -89,6 +90,11 @@ class Tick(artist.Artist):
         size is the tick size in points
         """
         artist.Artist.__init__(self)
+
+        if label is not None:
+            cbook.warn_deprecated(
+                since='2.1', name='label', obj_type='argument',
+                alternative='the label1 and label2 arguments and properties')
 
         if gridOn is None:
             if major and (rcParams['axes.grid.which'] in ('both', 'major')):
@@ -156,7 +162,6 @@ class Tick(artist.Artist):
         self.gridline = self._get_gridline()
 
         self.label1 = self._get_text1()
-        self.label = self.label1  # legacy name
         self.label2 = self._get_text2()
 
         self.gridOn = gridOn
@@ -166,6 +171,12 @@ class Tick(artist.Artist):
         self.label2On = label2On
 
         self.update_position(loc)
+
+    @property
+    @cbook.deprecated(since='2.1', obj_type='property',
+                      alternative='the label1 and label2 properties')
+    def label(self):
+        return self.label1
 
     def apply_tickdir(self, tickdir):
         """
@@ -1725,7 +1736,7 @@ class XAxis(Axis):
             tick_kw = self._major_tick_kw
         else:
             tick_kw = self._minor_tick_kw
-        return XTick(self.axes, 0, '', major=major, **tick_kw)
+        return XTick(self.axes, 0, major=major, **tick_kw)
 
     def _get_label(self):
         # x in axes coords, y in display coords (to be updated at draw
@@ -2056,7 +2067,7 @@ class YAxis(Axis):
             tick_kw = self._major_tick_kw
         else:
             tick_kw = self._minor_tick_kw
-        return YTick(self.axes, 0, '', major=major, **tick_kw)
+        return YTick(self.axes, 0, major=major, **tick_kw)
 
     def _get_label(self):
         # x in display coords (updated by _update_label_position)
