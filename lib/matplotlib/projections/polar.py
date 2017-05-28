@@ -518,8 +518,7 @@ class PolarAxes(Axes):
         if frac is not None:
             self._theta_label1_position.clear().translate(0.0, frac)
             self._theta_label2_position.clear().translate(0.0, 1.0 / frac)
-        for t in self.xaxis.get_ticklabels():
-            t.update(kwargs)
+        self.xaxis.set_tick_params(which='major', **kwargs)
         return self.xaxis.get_ticklines(), self.xaxis.get_ticklabels()
 
     @docstring.dedent_interpd
@@ -561,8 +560,7 @@ class PolarAxes(Axes):
         if angle is None:
             angle = self.get_rlabel_position()
         self.set_rlabel_position(angle)
-        for t in self.yaxis.get_ticklabels():
-            t.update(kwargs)
+        self.yaxis.set_tick_params(which='major', **kwargs)
         return self.yaxis.get_gridlines(), self.yaxis.get_ticklabels()
 
     def set_xscale(self, scale, *args, **kwargs):
