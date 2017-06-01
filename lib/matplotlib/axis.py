@@ -681,9 +681,9 @@ class Axis(artist.Artist):
         self.unit_data = None
         self.pickradius = pickradius
 
-        # Initialize here for testing; later add API
-        self._major_tick_kw = dict()
-        self._minor_tick_kw = dict()
+        # Prototype ticks that are copied to create new ones and store defaults.
+        self._proto_major_tick = self._get_tick(major=True)
+        self._proto_minor_tick = self._get_tick(major=False)
 
         self.cla()
         self._set_scale('linear')
@@ -772,10 +772,12 @@ class Axis(artist.Artist):
         self.callbacks = cbook.CallbackRegistry()
 
         # whether the grids are on
-        self._gridOnMajor = (rcParams['axes.grid'] and
-                             rcParams['axes.grid.which'] in ('both', 'major'))
-        self._gridOnMinor = (rcParams['axes.grid'] and
-                             rcParams['axes.grid.which'] in ('both', 'minor'))
+        self._proto_major_tick.gridOn = (
+            rcParams['axes.grid'] and
+            rcParams['axes.grid.which'] in ('both', 'major'))
+        self._proto_minor_tick.gridOn = (
+            rcParams['axes.grid'] and
+            rcParams['axes.grid.which'] in ('both', 'minor'))
 
         self.label.set_text('')
         self._set_artist_props(self.label)
@@ -794,8 +796,8 @@ class Axis(artist.Artist):
         del self.majorTicks[:]
         del self.minorTicks[:]
 
-        self.majorTicks.append(self._get_tick(major=True))
-        self.minorTicks.append(self._get_tick(major=False))
+        self.majorTicks.append(self._proto_major_tick)
+        self.minorTicks.append(self._proto_minor_tick)
 
     def set_tick_params(self, which='major', reset=False, **kw):
         """
@@ -804,25 +806,24 @@ class Axis(artist.Artist):
         For documentation of keyword arguments, see
         :meth:`matplotlib.axes.Axes.tick_params`.
         """
-        dicts = []
-        if which == 'major' or which == 'both':
-            dicts.append(self._major_tick_kw)
-        if which == 'minor' or which == 'both':
-            dicts.append(self._minor_tick_kw)
         kwtrans = self._translate_tick_kw(kw, to_init_kw=True)
-        for d in dicts:
+        if which == 'major' or which == 'both':
             if reset:
-                d.clear()
-            d.update(kwtrans)
+                self._proto_major_tick = self._get_tick(major=True)
+            self._proto_major_tick._apply_params(**kwtrans)
+        if which == 'minor' or which == 'both':
+            if reset:
+                self._proto_minor_tick = self._get_tick(minor=True)
+            self._proto_minor_tick._apply_params(**kwtrans)
         if reset:
             self.reset_ticks()
         else:
             if which == 'major' or which == 'both':
                 for tick in self.majorTicks:
-                    tick._apply_params(**self._major_tick_kw)
+                    tick._apply_params(**kwtrans)
             if which == 'minor' or which == 'both':
                 for tick in self.minorTicks:
-                    tick._apply_params(**self._minor_tick_kw)
+                    tick._apply_params(**kwtrans)
             if 'labelcolor' in kwtrans:
                 self.offsetText.set_color(kwtrans['labelcolor'])
         self.stale = True
@@ -1329,14 +1330,11 @@ class Axis(artist.Artist):
         'get the tick instances; grow as necessary'
         if numticks is None:
             numticks = len(self.get_major_locator()())
-        if len(self.majorTicks) < numticks:
-            proto = self.majorTicks[0]
-            # update the new tick label properties from the old
-            for i in range(numticks - len(self.majorTicks)):
-                tick = proto.copy()
-                if self._gridOnMajor:
-                    tick.gridOn = True
-                self.majorTicks.append(tick)
+
+        # Add new tick with properties from the old one.
+        for i in range(numticks - len(self.majorTicks)):
+            tick = self._proto_major_tick.copy()
+            self.majorTicks.append(tick)
 
         ticks = self.majorTicks[:numticks]
 
@@ -1347,14 +1345,10 @@ class Axis(artist.Artist):
         if numticks is None:
             numticks = len(self.get_minor_locator()())
 
-        if len(self.minorTicks) < numticks:
-            proto = self.minorTicks[0]
-            # update the new tick label properties from the old
-            for i in range(numticks - len(self.minorTicks)):
-                tick = proto.copy()
-                if self._gridOnMinor:
-                    tick.gridOn = True
-                self.minorTicks.append(tick)
+        # Add new tick with properties from the old one.
+        for i in range(numticks - len(self.minorTicks)):
+            tick = self._proto_minor_tick.copy()
+            self.minorTicks.append(tick)
 
         ticks = self.minorTicks[:numticks]
 
@@ -1378,28 +1372,26 @@ class Axis(artist.Artist):
         which = which.lower()
         if which in ['minor', 'both']:
             if b is None:
-                self._gridOnMinor = not self._gridOnMinor
-            else:
-                self._gridOnMinor = b
+                b = not self._proto_major_tick.gridOn
+            self._proto_major_tick.gridOn = b
+            self._proto_major_tick.gridline.update(kwargs)
             for tick in self.minorTicks:  # don't use get_ticks here!
                 if tick is None:
                     continue
-                tick.gridOn = self._gridOnMinor
+                tick.gridOn = b
                 if len(kwargs):
                     tick.gridline.update(kwargs)
-            self._minor_tick_kw['gridOn'] = self._gridOnMinor
         if which in ['major', 'both']:
             if b is None:
-                self._gridOnMajor = not self._gridOnMajor
-            else:
-                self._gridOnMajor = b
+                b = not self._proto_major_tick.gridOn
+            self._proto_major_tick.gridOn = b
+            self._proto_major_tick.gridline.update(kwargs)
             for tick in self.majorTicks:  # don't use get_ticks here!
                 if tick is None:
                     continue
-                tick.gridOn = self._gridOnMajor
+                tick.gridOn = b
                 if len(kwargs):
                     tick.gridline.update(kwargs)
-            self._major_tick_kw['gridOn'] = self._gridOnMajor
         self.stale = True
 
     def update_units(self, data):
@@ -1721,11 +1713,7 @@ class XAxis(Axis):
         return inaxis, {}
 
     def _get_tick(self, major):
-        if major:
-            tick_kw = self._major_tick_kw
-        else:
-            tick_kw = self._minor_tick_kw
-        return XTick(self.axes, 0, major=major, **tick_kw)
+        return XTick(self.axes, 0, major=major)
 
     def _get_label(self):
         # x in axes coords, y in display coords (to be updated at draw
@@ -2016,10 +2004,9 @@ class XAxis(Axis):
     def get_tick_space(self):
         ends = self.axes.transAxes.transform([[0, 0], [1, 0]])
         length = ((ends[1][0] - ends[0][0]) / self.axes.figure.dpi) * 72.0
-        tick = self._get_tick(True)
         # There is a heuristic here that the aspect ratio of tick text
         # is no more than 3:1
-        size = tick.label1.get_size() * 3
+        size = self._proto_major_tick.label1.get_size() * 3
         if size > 0:
             return int(np.floor(length / size))
         else:
@@ -2052,11 +2039,7 @@ class YAxis(Axis):
         return inaxis, {}
 
     def _get_tick(self, major):
-        if major:
-            tick_kw = self._major_tick_kw
-        else:
-            tick_kw = self._minor_tick_kw
-        return YTick(self.axes, 0, major=major, **tick_kw)
+        return YTick(self.axes, 0, major=major)
 
     def _get_label(self):
         # x in display coords (updated by _update_label_position)
@@ -2353,9 +2336,8 @@ class YAxis(Axis):
     def get_tick_space(self):
         ends = self.axes.transAxes.transform([[0, 0], [0, 1]])
         length = ((ends[1][1] - ends[0][1]) / self.axes.figure.dpi) * 72.0
-        tick = self._get_tick(True)
         # Having a spacing of at least 2 just looks good.
-        size = tick.label1.get_size() * 2.0
+        size = self._proto_major_tick.label1.get_size() * 2.0
         if size > 0:
             return int(np.floor(length / size))
         else:

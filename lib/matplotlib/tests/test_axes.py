@@ -4178,9 +4178,6 @@ def test_twin_spines_on_top():
 
 
 def test_rcparam_grid_minor():
-    orig_grid = matplotlib.rcParams['axes.grid']
-    orig_locator = matplotlib.rcParams['axes.grid.which']
-
     matplotlib.rcParams['axes.grid'] = True
 
     values = (
@@ -4193,10 +4190,8 @@ def test_rcparam_grid_minor():
         matplotlib.rcParams['axes.grid.which'] = locator
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        assert (ax.xaxis._gridOnMajor, ax.xaxis._gridOnMinor) == result
-
-    matplotlib.rcParams['axes.grid'] = orig_grid
-    matplotlib.rcParams['axes.grid.which'] = orig_locator
+        assert ax.xaxis._proto_major_tick.gridOn == result[0]
+        assert ax.xaxis._proto_minor_tick.gridOn == result[1]
 
 
 def test_vline_limit():
@@ -4541,15 +4536,15 @@ def test_rc_tick():
         xax = ax1.xaxis
         yax = ax1.yaxis
         # tick1On bottom/left
-        assert not xax._major_tick_kw['tick1On']
-        assert xax._major_tick_kw['tick2On']
-        assert not xax._minor_tick_kw['tick1On']
-        assert xax._minor_tick_kw['tick2On']
+        assert not xax._proto_major_tick.tick1On
+        assert xax._proto_major_tick.tick2On
+        assert not xax._proto_minor_tick.tick1On
+        assert xax._proto_minor_tick.tick2On
 
-        assert yax._major_tick_kw['tick1On']
-        assert not yax._major_tick_kw['tick2On']
-        assert yax._minor_tick_kw['tick1On']
-        assert not yax._minor_tick_kw['tick2On']
+        assert yax._proto_major_tick.tick1On
+        assert not yax._proto_major_tick.tick2On
+        assert yax._proto_minor_tick.tick1On
+        assert not yax._proto_minor_tick.tick2On
 
 
 def test_rc_major_minor_tick():
@@ -4564,15 +4559,15 @@ def test_rc_major_minor_tick():
         xax = ax1.xaxis
         yax = ax1.yaxis
         # tick1On bottom/left
-        assert not xax._major_tick_kw['tick1On']
-        assert xax._major_tick_kw['tick2On']
-        assert not xax._minor_tick_kw['tick1On']
-        assert xax._minor_tick_kw['tick2On']
+        assert not xax._proto_major_tick.tick1On
+        assert xax._proto_major_tick.tick2On
+        assert not xax._proto_minor_tick.tick1On
+        assert xax._proto_minor_tick.tick2On
 
-        assert not yax._major_tick_kw['tick1On']
-        assert yax._major_tick_kw['tick2On']
-        assert not yax._minor_tick_kw['tick1On']
-        assert yax._minor_tick_kw['tick2On']
+        assert not yax._proto_major_tick.tick1On
+        assert yax._proto_major_tick.tick2On
+        assert not yax._proto_minor_tick.tick1On
+        assert yax._proto_minor_tick.tick2On
 
 
 def test_square_plot():
@@ -4870,10 +4865,10 @@ def test_axis_set_tick_params_labelsize_labelcolor():
                                  direction='out')
 
     # Expected values after setting the ticks
-    assert axis_1.yaxis.majorTicks[0]._size == 4.0
-    assert axis_1.yaxis.majorTicks[0]._color == 'k'
-    assert axis_1.yaxis.majorTicks[0]._labelsize == 30.0
-    assert axis_1.yaxis.majorTicks[0]._labelcolor == 'red'
+    assert axis_1.yaxis._proto_major_tick._size == 4.0
+    assert axis_1.yaxis._proto_major_tick._color == 'k'
+    assert axis_1.yaxis._proto_major_tick._labelsize == 30.0
+    assert axis_1.yaxis._proto_major_tick._labelcolor == 'red'
 
 
 def test_none_kwargs():
