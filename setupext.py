@@ -62,13 +62,24 @@ def _get_xdg_cache_dir():
     return path
 
 
+# MD5 hashes of the FreeType tarballs
+_freetype_hashes = {
+    '2.6.1': '348e667d728c597360e4a87c16556597',
+    '2.6.2': 'c408547878f1f5a3700881a8bbf1c644',
+    '2.6.3': '8b0c80b64042b7c39b9fa9debe6305c3',
+    '2.6.4': 'f2b84651cb70c0a7d64a7f427b6675cd',
+    '2.6.5': '31b2276515d9ee1c7f37d9c9f4f3145a',
+    '2.7': '337139e5c7c5bd645fe130608e0fa8b5',
+    '2.7.1': '78701bee8d249578d83bb9a2f3aa3616',
+    '2.8': 'c89c00767f939bff559d5dad326c1355',
+    '2.8.1': 'c947b6b1c513e814cc9d7617a44bc6cf',
+}
 # This is the version of FreeType to use when building a local
 # version.  It must match the value in
 # lib/matplotlib.__init__.py and also needs to be changed below in the
 # embedded windows build script (grep for "REMINDER" in this file)
 LOCAL_FREETYPE_VERSION = '2.6.1'
-# md5 hash of the freetype tarball
-LOCAL_FREETYPE_HASH = '348e667d728c597360e4a87c16556597'
+LOCAL_FREETYPE_HASH = _freetype_hashes.get(LOCAL_FREETYPE_VERSION, 'unknown')
 
 if sys.platform != 'win32':
     if not PY3min:
