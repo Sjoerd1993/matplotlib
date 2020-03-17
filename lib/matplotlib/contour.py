@@ -1421,7 +1421,7 @@ class QuadContourSet(ContourSet):
             if self._corner_mask is None:
                 self._corner_mask = mpl.rcParams['contour.corner_mask']
 
-            x, y, z = self._contour_args(args, kwargs)
+            x, y, z, kwargs = self._contour_args(args, kwargs)
 
             _mask = ma.getmask(z)
             if _mask is ma.nomask or not _mask.any():
@@ -1479,7 +1479,7 @@ class QuadContourSet(ContourSet):
             x, y = self._initialize_x_y(z)
             args = args[1:]
         elif Nargs <= 4:
-            x, y, z = self._check_xyz(args[:3], kwargs)
+            x, y, z, kwargs = self._check_xyz(args[:3], kwargs)
             args = args[3:]
         else:
             raise TypeError("Too many arguments to %s; see help(%s)" %
@@ -1493,7 +1493,7 @@ class QuadContourSet(ContourSet):
                                  'masked')
             self.zmin = float(z.min())
         self._process_contour_level_args(args)
-        return (x, y, z)
+        return x, y, z, kwargs
 
     def _check_xyz(self, args, kwargs):
         """
@@ -1539,7 +1539,7 @@ class QuadContourSet(ContourSet):
         else:
             raise TypeError(f"Inputs x and y must be 1D or 2D, not {x.ndim}D")
 
-        return x, y, z
+        return x, y, z, kwargs
 
     def _initialize_x_y(self, z):
         """
