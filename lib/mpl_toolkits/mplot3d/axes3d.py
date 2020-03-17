@@ -158,7 +158,8 @@ class Axes3D(Axes):
         Look for unit *kwargs* and update the axis instances as necessary
 
         """
-        super()._process_unit_info(xdata=xdata, ydata=ydata, kwargs=kwargs)
+        kwargs = super()._process_unit_info(xdata=xdata, ydata=ydata,
+                                            kwargs=kwargs)
 
         if self.xaxis is None or self.yaxis is None or self.zaxis is None:
             return
@@ -177,6 +178,8 @@ class Axes3D(Axes):
                 # we need to update.
                 if zdata is not None:
                     self.zaxis.update_units(zdata)
+
+        return kwargs
 
     def set_top_view(self):
         # this happens to be the right view for the viewing coordinates
