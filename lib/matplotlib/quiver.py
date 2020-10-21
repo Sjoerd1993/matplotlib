@@ -257,7 +257,6 @@ class QuiverKey(martist.Artist):
         self.angle = angle
         self.coord = coordinates
         self.color = color
-        self.label = label
         self._labelsep_inches = labelsep
         self.labelsep = (self._labelsep_inches * Q.axes.figure.dpi)
 
@@ -275,22 +274,67 @@ class QuiverKey(martist.Artist):
         self._cid = Q.axes.figure.callbacks.connect(
             'dpi_changed', on_dpi_change)
 
-        self.labelpos = labelpos
-        self.labelcolor = labelcolor
+        _api.check_in_list(['N', 'S', 'E', 'W'], labelpos=labelpos)
+        self._labelpos = labelpos
         self.fontproperties = fontproperties or dict()
         self.kw = kwargs
         _fp = self.fontproperties
         # boxprops = dict(facecolor='red')
         self.text = mtext.Text(
             text=label,  # bbox=boxprops,
-            horizontalalignment=self.halign[self.labelpos],
-            verticalalignment=self.valign[self.labelpos],
-            fontproperties=font_manager.FontProperties._from_any(_fp))
+            horizontalalignment=self.halign[self._labelpos],
+            verticalalignment=self.valign[self._labelpos],
+            fontproperties=font_manager.FontProperties._from_any(_fp),
+            color=labelcolor)
 
-        if self.labelcolor is not None:
-            self.text.set_color(self.labelcolor)
         self._initialized = False
         self.zorder = Q.zorder + 0.1
+
+    def get_label(self):
+        """Return the label string."""
+        return self.text.get_text()
+
+    def set_label(self, text):
+        """Set the label string."""
+        self.text.set_text(text)
+        self.stale = True
+
+    label = property(get_label, set_label, doc="The label string.")
+
+    def get_labelcolor(self):
+        """Return the label color."""
+        return self.text.get_color()
+
+    def set_labelcolor(self, labelcolor):
+        """Set the label color."""
+        self.text.set_color(labelcolor)
+        self.stale = True
+
+    labelcolor = property(get_labelcolor, set_labelcolor,
+                          doc="The label color.")
+
+    def get_labelpos(self):
+        """Return the label position."""
+        return self._labelpos
+
+    def set_labelpos(self, labelpos):
+        """
+        Set the label position.
+
+        Parameters
+        ----------
+        labelpos : {'N', 'S', 'E', 'W'}
+            Position the label above, below, to the right, to the left of the
+            arrow, respectively.
+        """
+        _api.check_in_list(['N', 'S', 'E', 'W'], labelpos=labelpos)
+        self._labelpos = labelpos
+        self.text.set_horizontalalignment(self.halign[labelpos])
+        self.text.set_verticalalignment(self.valign[labelpos])
+        self._initialized = False
+        self.stale = True
+
+    labelpos = property(get_labelpos, set_labelpos, doc="The label position.")
 
     def remove(self):
         # docstring inherited
@@ -303,7 +347,7 @@ class QuiverKey(martist.Artist):
             if not self.Q._initialized:
                 self.Q._init()
             self._set_transform()
-            with cbook._setattr_cm(self.Q, pivot=self.pivot[self.labelpos],
+            with cbook._setattr_cm(self.Q, pivot=self.pivot[self._labelpos],
                                    # Hack: save and restore the Umask
                                    Umask=ma.nomask):
                 u = self.U * np.cos(np.radians(self.angle))
@@ -326,17 +370,17 @@ class QuiverKey(martist.Artist):
             self._initialized = True
 
     def _text_x(self, x):
-        if self.labelpos == 'E':
+        if self._labelpos == 'E':
             return x + self.labelsep
-        elif self.labelpos == 'W':
+        elif self._labelpos == 'W':
             return x - self.labelsep
         else:
             return x
 
     def _text_y(self, y):
-        if self.labelpos == 'N':
+        if self._labelpos == 'N':
             return y + self.labelsep
-        elif self.labelpos == 'S':
+        elif self._labelpos == 'S':
             return y - self.labelsep
         else:
             return y
