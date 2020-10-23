@@ -249,7 +249,7 @@ def test_quiverkey_angles():
     qk = ax.quiverkey(q, 1, 1, 2, 'Label')
     # The arrows are only created when the key is drawn
     fig.canvas.draw()
-    assert len(qk.verts) == 1
+    assert len(qk._verts) == 1
 
 
 def test_quiver_setuvc_numbers():
