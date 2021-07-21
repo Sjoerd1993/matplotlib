@@ -229,6 +229,7 @@ jobs:
             --extract coverage.info $PWD/src/'*' $PWD/lib/'*'
           lcov --list coverage.info
           find . -name '*.gc*' -delete
+          coverage combine -a
         if: ${{ runner.os != 'macOS' }}
       - name: Upload code coverage
         uses: codecov/codecov-action@v2
