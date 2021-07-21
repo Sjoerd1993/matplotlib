@@ -173,6 +173,7 @@ def test_interactive_backend(backend, toolbar):
     if proc.returncode:
         pytest.fail("The subprocess returned with non-zero exit status "
                     f"{proc.returncode}.")
+    print(proc.stdout)
     assert proc.stdout.count("CloseEvent") == 1
 
 
