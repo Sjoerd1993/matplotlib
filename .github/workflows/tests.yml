@@ -219,7 +219,8 @@ jobs:
         run: |
           ${{ matrix.XVFB_RUN }} python -mpytest -raR -n auto \
             --maxfail=50 --timeout=300 --durations=25 \
-            --cov-report= --cov=lib --log-level=DEBUG
+            --cov-report= --cov=lib --log-level=DEBUG \
+            -sv -k backends_interactive
 
       - name: Filter C coverage
         run: |
