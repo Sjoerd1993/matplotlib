@@ -171,11 +171,11 @@ _freetype_hashes = {
 # This is the version of FreeType to use when building a local version.  It
 # must match the value in lib/matplotlib.__init__.py and also needs to be
 # changed below in the embedded windows build script (grep for "REMINDER" in
-# this file). Also update the cache path in `.circleci/config.yml`.
+# this file). Also update the cache path in all CI caching steps.
 LOCAL_FREETYPE_VERSION = '2.6.1'
 LOCAL_FREETYPE_HASH = _freetype_hashes.get(LOCAL_FREETYPE_VERSION, 'unknown')
 
-# Also update the cache path in `.circleci/config.yml`.
+# Also update the cache path in all CI caching steps.
 LOCAL_QHULL_VERSION = '2020.2'
 LOCAL_QHULL_HASH = 'b5c2d7eb833278881b952c8a52d20179eab87766b00b865000469a45c1838b7e'
 
