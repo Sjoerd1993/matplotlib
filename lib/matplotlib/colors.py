@@ -8,8 +8,8 @@ This module includes functions and classes for color specification conversions,
 and for mapping numbers to colors in a 1-D array of colors called a colormap.
 
 Mapping data onto colors using a colormap typically involves two steps: a data
-array is first mapped onto the range 0-1 using a subclass of `Normalize`,
-then this number is mapped to a color using a subclass of `Colormap`.  Two
+array is first mapped onto the range 0-1 using a subclass of `Normalize`, then
+this number is mapped to a color using a subclass of `Colormap`.  Two
 subclasses of `Colormap` provided here:  `LinearSegmentedColormap`, which uses
 piecewise-linear interpolation to define colormaps, and `ListedColormap`, which
 makes a colormap from a list of colors.
