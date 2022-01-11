@@ -5,6 +5,7 @@ import math
 import os.path
 import sys
 import tkinter as tk
+from tkinter import ttk
 import tkinter.filedialog
 import tkinter.font
 import tkinter.messagebox
@@ -524,8 +525,8 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
         # so that Tool implementations can reuse the methods.
         self.window = window
 
-        tk.Frame.__init__(self, master=window, borderwidth=2,
-                          width=int(canvas.figure.bbox.width), height=50)
+        ttk.Frame.__init__(self, master=window, borderwidth=2,
+                           width=int(canvas.figure.bbox.width), height=50)
 
         self._buttons = {}
         for text, tooltip_text, image_file, callback in self.toolitems:
@@ -548,14 +549,14 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
         # lines high. Otherwise the canvas gets redrawn as the mouse hovers
         # over images because those use two-line messages which resize the
         # toolbar.
-        label = tk.Label(master=self, font=self._label_font,
-                         text='\N{NO-BREAK SPACE}\n\N{NO-BREAK SPACE}')
+        label = ttk.Label(master=self, font=self._label_font,
+                          text='\N{NO-BREAK SPACE}\n\N{NO-BREAK SPACE}')
         label.pack(side=tk.RIGHT)
 
         self.message = tk.StringVar(master=self)
-        self._message_label = tk.Label(master=self, font=self._label_font,
-                                       textvariable=self.message,
-                                       justify=tk.RIGHT)
+        self._message_label = ttk.Label(master=self, font=self._label_font,
+                                        textvariable=self.message,
+                                        justify=tk.RIGHT)
         self._message_label.pack(side=tk.RIGHT)
 
         NavigationToolbar2.__init__(self, canvas)
@@ -573,17 +574,18 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
         scale correctly to pixels.
         """
         for widget in self.winfo_children():
-            if isinstance(widget, (tk.Button, tk.Checkbutton)):
+            if isinstance(widget, (tk.Button, ttk.Button,
+                                   tk.Checkbutton, ttk.Checkbutton)):
                 if hasattr(widget, '_image_file'):
                     # Explicit class because ToolbarTk calls _rescale.
                     NavigationToolbar2Tk._set_image_for_button(self, widget)
                 else:
                     # Text-only button is handled by the font setting instead.
                     pass
-            elif isinstance(widget, tk.Frame):
+            elif isinstance(widget, (tk.Frame, ttk.Frame)):
                 widget.configure(height='22p', pady='1p')
                 widget.pack_configure(padx='4p')
-            elif isinstance(widget, tk.Label):
+            elif isinstance(widget, (tk.Label, ttk.Label)):
                 pass  # Text is handled by the font setting instead.
             else:
                 _log.warning('Unknown child class %s', widget.winfo_class)
@@ -591,12 +593,16 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
 
     def _update_buttons_checked(self):
         # sync button checkstates to match active mode
+        print('Update buttons for mode', self.mode)
         for text, mode in [('Zoom', _Mode.ZOOM), ('Pan', _Mode.PAN)]:
             if text in self._buttons:
-                if self.mode == mode:
-                    self._buttons[text].select()  # NOT .invoke()
-                else:
-                    self._buttons[text].deselect()
+                print(text, mode)
+                if self.mode == mode and self._buttons[text].var.get() == 0:
+                    self._buttons[text].var.set(1)
+                    print('Add selected', self._buttons[text].state())
+                elif self.mode != mode and self._buttons[text].var.get() == 1:
+                    self._buttons[text].var.set(0)
+                    print('Remove selected', self._buttons[text].state())
 
     def pan(self, *args):
         super().pan(*args)
@@ -653,22 +659,23 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
         with Image.open(path_large if (size > 24 and path_large.exists())
                         else path_regular) as im:
             image = ImageTk.PhotoImage(im.resize((size, size)), master=self)
-        button.configure(image=image, height='18p', width='18p')
+        button.configure(image=image)  # , height='18p', width='18p')
         button._ntimage = image  # Prevent garbage collection.
 
     def _Button(self, text, image_file, toggle, command):
         if not toggle:
-            b = tk.Button(master=self, text=text, command=command)
+            b = ttk.Button(master=self, text=text, command=command)
         else:
             # There is a bug in tkinter included in some python 3.6 versions
             # that without this variable, produces a "visual" toggling of
             # other near checkbuttons
             # https://bugs.python.org/issue29402
             # https://bugs.python.org/issue25684
-            var = tk.IntVar(master=self)
-            b = tk.Checkbutton(
+            var = tk.IntVar(master=self, value=0)
+            b = ttk.Checkbutton(
                 master=self, text=text, command=command,
-                indicatoron=False, variable=var)
+                # indicatoron=False
+                variable=var)
             b.var = var
         b._image_file = image_file
         if image_file is not None:
@@ -680,9 +687,10 @@ class NavigationToolbar2Tk(NavigationToolbar2, tk.Frame):
         return b
 
     def _Spacer(self):
-        # Buttons are also 18pt high.
-        s = tk.Frame(master=self, height='18p', relief=tk.RIDGE, bg='DarkGray')
-        s.pack(side=tk.LEFT, padx='3p')
+        # Buttons are 18pt high. Make this 16pt tall +1pt padding to center it.
+        s = ttk.Separator(master=self, orient=tk.VERTICAL)
+        # padding=(0, '1p', 0, '1p'),  # height='16p', pady='1p', relief=tk.RIDGE, bg='DarkGray')
+        s.pack(side=tk.LEFT, padx='4p', fill='y')
         return s
 
     def save_figure(self, *args):
@@ -776,8 +784,8 @@ class ToolTip:
                        "help", "noActivates")
         except tk.TclError:
             pass
-        label = tk.Label(tw, text=self.text, justify=tk.LEFT,
-                         relief=tk.SOLID, borderwidth=1)
+        label = ttk.Label(tw, text=self.text, justify=tk.LEFT,
+                          relief=tk.SOLID, borderwidth=1)
         label.pack(ipadx=1)
 
     def hidetip(self):
@@ -808,18 +816,18 @@ class SetCursorTk(backend_tools.SetCursorBase):
             self._make_classic_style_pseudo_toolbar(), cursor)
 
 
-class ToolbarTk(ToolContainerBase, tk.Frame):
+class ToolbarTk(ToolContainerBase, ttk.Frame):
     def __init__(self, toolmanager, window):
         ToolContainerBase.__init__(self, toolmanager)
         xmin, xmax = self.toolmanager.canvas.figure.bbox.intervalx
         height, width = 50, xmax - xmin
-        tk.Frame.__init__(self, master=window,
-                          width=int(width), height=int(height),
-                          borderwidth=2)
+        ttk.Frame.__init__(self, master=window,
+                           width=int(width), height=int(height),
+                           borderwidth=2)
         self._label_font = tkinter.font.Font(size=10)
         self._message = tk.StringVar(master=self)
-        self._message_label = tk.Label(master=self, font=self._label_font,
-                                       textvariable=self._message)
+        self._message_label = ttk.Label(master=self, font=self._label_font,
+                                        textvariable=self._message)
         self._message_label.pack(side=tk.RIGHT)
         self._toolitems = {}
         self.pack(side=tk.TOP, fill=tk.X)
@@ -842,7 +850,7 @@ class ToolbarTk(ToolContainerBase, tk.Frame):
         if group not in self._groups:
             if self._groups:
                 self._add_separator()
-            frame = tk.Frame(master=self, borderwidth=0)
+            frame = ttk.Frame(master=self, borderwidth=0)
             frame.pack(side=tk.LEFT, fill=tk.Y)
             self._groups[group] = frame
         return self._groups[group]
