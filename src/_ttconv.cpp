@@ -9,7 +9,7 @@
 #include "mplutils.h"
 
 #include <Python.h>
-#include "ttconv/pprdrv.h"
+#include "pprdrv.h"
 #include "py_exceptions.h"
 #include <vector>
 #include <cassert>
