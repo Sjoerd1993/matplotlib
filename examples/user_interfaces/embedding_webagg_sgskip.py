@@ -61,7 +61,6 @@ html_content = """
     <link rel="stylesheet" href="_static/css/page.css" type="text/css">
     <link rel="stylesheet" href="_static/css/boilerplate.css"
           type="text/css" />
-    <link rel="stylesheet" href="_static/css/fbm.css" type="text/css" />
     <link rel="stylesheet" href="_static/css/mpl.css" type="text/css">
     <script src="mpl.js"></script>
 
