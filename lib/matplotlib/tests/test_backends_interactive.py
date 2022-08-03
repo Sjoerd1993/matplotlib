@@ -408,15 +408,15 @@ def test_cross_Qt_imports():
 @pytest.mark.skipif('TF_BUILD' in os.environ,
                     reason="this test fails an azure for unknown reasons")
 @pytest.mark.skipif(os.name == "nt", reason="Cannot send SIGINT on Windows.")
-def test_webagg():
+def test_webagg(random_port):
     pytest.importorskip("tornado")
     proc = subprocess.Popen(
         [sys.executable, "-c",
          inspect.getsource(_test_interactive_impl)
-         + "\n_test_interactive_impl()", "{}"],
+         + "\n_test_interactive_impl()",
+         json.dumps({'webagg.port': random_port})],
         env={**os.environ, "MPLBACKEND": "webagg", "SOURCE_DATE_EPOCH": "0"})
-    url = "http://{}:{}".format(
-        mpl.rcParams["webagg.address"], mpl.rcParams["webagg.port"])
+    url = f'http://{mpl.rcParams["webagg.address"]}:{random_port}'
     timeout = time.perf_counter() + _test_timeout
     while True:
         try:
@@ -432,7 +432,12 @@ def test_webagg():
                 continue
     conn.close()
     proc.send_signal(signal.SIGINT)
-    assert proc.wait(timeout=_test_timeout) == 0
+    try:
+        assert proc.wait(timeout=_test_timeout) == 0
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=_test_timeout)
+        raise
 
 
 def _lazy_headless():
