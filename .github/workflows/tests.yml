@@ -245,6 +245,9 @@ jobs:
             --index-url https://pypi.anaconda.org/scipy-wheels-nightly/simple \
             --upgrade --only-binary=:all: numpy pandas
 
+      - name: Install browsers for testing
+        run: playwright install --with-deps
+
       - name: Install Matplotlib
         run: |
           ccache -s
