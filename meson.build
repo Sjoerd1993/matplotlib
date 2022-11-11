@@ -15,3 +15,4 @@ py3_dep = py3.dependency()
 
 subdir('extern')
 subdir('src')
+subdir('lib')
