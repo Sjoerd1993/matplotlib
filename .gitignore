@@ -46,6 +46,7 @@ mplsetup.cfg
 lib/matplotlib/_version.py
 # build subproject files
 subprojects/*/
+!subprojects/packagefiles/
 
 # OS generated files #
 ######################

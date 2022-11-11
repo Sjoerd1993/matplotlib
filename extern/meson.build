@@ -15,4 +15,9 @@ else
   freetype_dep = freetype_proj.get_variable('freetype_dep')
 endif
 
-qhull_dep = cc.find_library('qhull_r')
+if get_option('system-qhull')
+  qhull_dep = cc.find_library('qhull_r')
+else
+  qhull_proj = subproject('qhull')
+  qhull_dep = qhull_proj.get_variable('qhull_dep')
+endif

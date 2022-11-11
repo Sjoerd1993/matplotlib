@@ -1,1 +1,2 @@
 option('system-freetype', type: 'boolean', value: false)
+option('system-qhull', type: 'boolean', value: false)
