@@ -620,6 +620,8 @@ def test_set_wrong_linestyle():
 
 @mpl.style.context('default')
 def test_capstyle():
+    col = mcollections.PathCollection([])
+    assert col.get_capstyle() is None
     col = mcollections.PathCollection([], capstyle='round')
     assert col.get_capstyle() == 'round'
     col.set_capstyle('butt')
@@ -628,6 +630,8 @@ def test_capstyle():
 
 @mpl.style.context('default')
 def test_joinstyle():
+    col = mcollections.PathCollection([])
+    assert col.get_joinstyle() is None
     col = mcollections.PathCollection([], joinstyle='round')
     assert col.get_joinstyle() == 'round'
     col.set_joinstyle('miter')
