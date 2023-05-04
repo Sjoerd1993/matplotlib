@@ -545,6 +545,15 @@ def test_LogNorm_inverse():
     assert_array_almost_equal([0.4], norm.inverse([0.30103]))
 
 
+def test_LogNorm_singular():
+    ln = mcolors.LogNorm(vmin=2, vmax=2)
+    result = ln([0, 1, 2, 3])
+    assert np.ma.is_masked(result[0])  # bad
+    assert result[1] < 0  # under
+    assert result[2] == 0  # normal
+    assert result[3] > 1  # over
+
+
 def test_PowerNorm():
     # Check an exponent of 1 gives same results as a normal linear
     # normalization. Also implicitly checks that vmin/vmax are
