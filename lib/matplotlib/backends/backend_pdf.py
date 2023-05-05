@@ -1730,39 +1730,38 @@ end"""
                'Subtype': Name('Image'),
                'Width': width,
                'Height': height,
-               'ColorSpace': Name({1: 'DeviceGray',
-                                   3: 'DeviceRGB'}[color_channels]),
+               'ColorSpace': Name({1: 'DeviceGray', 3: 'DeviceRGB'}[color_channels]),
                'BitsPerComponent': 8}
         if smask:
             obj['SMask'] = smask
         if mpl.rcParams['pdf.compression']:
             if data.shape[-1] == 1:
                 data = data.squeeze(axis=-1)
+            png = {'Predictor': 10, 'Colors': color_channels, 'Columns': width}
             img = Image.fromarray(data)
             img_colors = img.getcolors(maxcolors=256)
             if color_channels == 3 and img_colors is not None:
                 # Convert to indexed color if there are 256 colors or fewer
                 # This can significantly reduce the file size
                 num_colors = len(img_colors)
-                # These constants were converted to IntEnums and deprecated in
-                # Pillow 9.2
+                palette_img = Image.new('P', (1, 1))
+                palette_img.putpalette([component
+                                        for _, color in img_colors
+                                        for component in color])
+                # This constant was converted to IntEnum and deprecated in Pillow 9.2.
                 dither = getattr(Image, 'Dither', Image).NONE
-                pmode = getattr(Image, 'Palette', Image).ADAPTIVE
-                img = img.convert(
-                    mode='P', dither=dither, palette=pmode, colors=num_colors
-                )
+                img = img.quantize(dither=dither, palette=palette_img)
                 png_data, bit_depth, palette = self._writePng(img)
                 if bit_depth is None or palette is None:
                     raise RuntimeError("invalid PNG header")
-                palette = palette[:num_colors * 3]  # Trim padding
-                obj['ColorSpace'] = Verbatim(
-                    b'[/Indexed /DeviceRGB %d %s]'
-                    % (num_colors - 1, pdfRepr(palette)))
+                palette = palette[:num_colors * 3]  # Trim padding; remove for Pillow>=9
+                obj['ColorSpace'] = [Name('Indexed'), Name('DeviceRGB'),
+                                     num_colors - 1, palette]
                 obj['BitsPerComponent'] = bit_depth
-                color_channels = 1
+                png['Colors'] = 1
+                png['BitsPerComponent'] = bit_depth
             else:
                 png_data, _, _ = self._writePng(img)
-            png = {'Predictor': 10, 'Colors': color_channels, 'Columns': width}
         else:
             png = None
         self.beginStream(
