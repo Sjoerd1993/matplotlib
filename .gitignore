@@ -30,7 +30,6 @@
 # Python files #
 ################
 # setup.py working directory
-build
 
 # setup.py dist directory
 dist
